@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Header from "./components/Header.js";
 import Footer from "./components/Footer.js";
-import Clock from "./components/Clock.js";
 import DeskGrid from "./components/Deskgrid.js";
 import SearchBar from "./components/SearchBar.js";
 import "./App.css";
@@ -14,9 +13,6 @@ function App() {
     <div>
       <Header selectedFloor={selectedFloor} setSelectedFloor={setSelectedFloor} />
       <div className="container">
-        <div className="sidebar">
-          <Clock />
-        </div>
         <div className="desk-area">
           <SearchBar setHighlightedDesk={setHighlightedDesk} />
           <DeskGrid highlightedDesk={highlightedDesk} selectedFloor={selectedFloor} />
