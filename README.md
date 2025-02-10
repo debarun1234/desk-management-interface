@@ -20,7 +20,7 @@ The **Office Desk Management Portal** is a real-time desk availability system th
 - Users can click on a **red (occupied)** desk to **release it**, turning it **green**.
   
 🎥 **Demo: Selecting a Desk & Occupying It**  
-![Desk Selection](picture/rec-2.gif)  
+![Desk Selection](https://github.com/debarun1234/desk-management-interface/blob/main/picture/rec-2.gif)  
 
 ---
 
@@ -30,7 +30,7 @@ The **Office Desk Management Portal** is a real-time desk availability system th
 - If the person is **not found**, an error message appears for **2 seconds**.
 
 🎥 **Demo: Searching for a Colleague's Desk**  
-![Desk Search & Highlight](picture/rec-3.gif)  
+![Desk Search & Highlight](https://github.com/debarun1234/desk-management-interface/blob/main/picture/rec-3.gif)  
 
 ---
 
@@ -39,7 +39,7 @@ The **Office Desk Management Portal** is a real-time desk availability system th
 - Each floor has a **separate desk layout** stored in the backend.
 
 🎥 **Demo: Multi-Floor Desk Layout**  
-![Multi-Floor View](picture/rec-1.gif)  
+![Multi-Floor View](https://github.com/debarun1234/desk-management-interface/blob/main/picture/rec-1.gif)
 
 ---
 
