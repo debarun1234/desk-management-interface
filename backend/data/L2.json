@@ -476,8 +476,8 @@
             "tech_area": "PRESS"
         },
         "2.WS.151": {
-            "status": "available",
-            "user": "",
+            "status": "occupied",
+            "user": "Debarun",
             "tech_area": "PRESS"
         },
         "2.WS.152": {
