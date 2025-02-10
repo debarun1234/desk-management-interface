@@ -5,52 +5,75 @@ import os
 import pytz
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
+import threading
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
-DESK_DATA_FILE = "desks.json"
+# Set timezone (India Standard Time - IST)
+TIMEZONE = pytz.timezone("Asia/Kolkata")
 
-# Set timezone (Change this to your local timezone)
-TIMEZONE = pytz.timezone("Asia/Kolkata")  # IST (Indian Standard Time)
+DATA_FOLDER = "data"
 
-# Load desk data
-def load_data():
-    if not os.path.exists(DESK_DATA_FILE):
-        return {"desks": {}}
-    with open(DESK_DATA_FILE, "r") as f:
+# Lock to handle file write operations safely
+file_lock = threading.Lock()
+
+# Function to get JSON path for a floor
+def get_floor_json(floor):
+    return os.path.join(DATA_FOLDER, f"{floor}.json")
+
+# Load data for a floor
+def load_data(floor):
+    json_path = get_floor_json(floor)
+    if not os.path.exists(json_path):
+        return {"error": f"Floor {floor} not found"}, 404  # Return error instead of an empty object
+    
+    with open(json_path, "r") as f:
         return json.load(f)
 
-# Save desk data
-def save_data(data):
-    with open(DESK_DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+# Save data for a floor safely with file lock
+def save_data(floor, data):
+    json_path = get_floor_json(floor)
+    with file_lock:  # Prevent race conditions when writing
+        with open(json_path, "w") as f:
+            json.dump(data, f, indent=4)
 
-# Auto-reset desks at 6 PM IST daily
-def reset_desks():
-    current_time = datetime.now(TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
-    print(f"Resetting all desks at {current_time} (IST)")
-
-    data = load_data()
-    for desk in data["desks"]:
-        data["desks"][desk]["status"] = "available"
-        data["desks"][desk]["user"] = ""
-
-    save_data(data)
-    print("All desks have been reset.")
+# Auto-reset all floors at 6 PM IST
+def reset_all_floors():
+    for floor in range(1, 19):  # Floors L1 to L18
+        floor_name = f"L{floor}"
+        json_path = get_floor_json(floor_name)
+        
+        if os.path.exists(json_path):
+            data = load_data(floor_name)
+            for desk in data["desks"]:
+                data["desks"][desk]["status"] = "available"
+                data["desks"][desk]["user"] = ""
+            save_data(floor_name, data)
+    
+    print(f"All floors reset at {datetime.now(TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')} IST")
 
 # Scheduler for auto-reset
-scheduler = BackgroundScheduler()
-scheduler.add_job(reset_desks, "cron", hour=18, minute=0)
+scheduler = BackgroundScheduler(timezone=TIMEZONE)
+scheduler.add_job(reset_all_floors, "cron", hour=18, minute=0)  # Reset at 6 PM IST
 scheduler.start()
 
-@app.route("/desks", methods=["GET"])
-def get_desks():
-    return jsonify(load_data())
+# Get desks for a specific floor
+@app.route("/desks/<floor>", methods=["GET"])
+def get_desks(floor):
+    result = load_data(floor)
+    if "error" in result:
+        return jsonify(result), 404  # Return proper 404 error if floor is missing
+    return jsonify(result)
 
-@app.route("/desk/<desk_id>", methods=["POST"])
-def update_desk(desk_id):
-    data = load_data()
+# Update desk status (occupy or leave)
+@app.route("/desk/<floor>/<desk_id>", methods=["POST"])
+def update_desk(floor, desk_id):
+    result = load_data(floor)
+    if "error" in result:
+        return jsonify(result), 404  # Return error if floor is missing
+
+    data = result
     action = request.json.get("action")
     user_name = request.json.get("user", "").strip()
 
@@ -61,22 +84,30 @@ def update_desk(desk_id):
         elif action == "leave":
             data["desks"][desk_id]["status"] = "available"
             data["desks"][desk_id]["user"] = ""
-        save_data(data)
+        save_data(floor, data)
         return jsonify({"status": "success"})
     
     return jsonify({"error": "Desk not found"}), 404
 
-@app.route("/search/<string:user_name>", methods=["GET"])
-def search_user(user_name):
-    user_name = user_name.strip().lower()  # Normalize input
-    data = load_data()
+# Search for a user in a floor
+@app.route("/search/<string:floor>/<string:user_name>", methods=["GET"])
+def search_user(floor, user_name):
+    result = load_data(floor)
+    if "error" in result:
+        return jsonify(result), 404  # Return error if floor is missing
+
+    data = result
+    user_name = user_name.strip().lower()  # Normalize input for case-insensitive search
     
     for desk_id, details in data["desks"].items():
-        if details["user"].strip().lower().startswith(user_name):  # Partial match
-            return jsonify({"desk_id": desk_id, "status": details["status"]})
+        if details["user"].strip().lower().startswith(user_name):  # Matches first few letters
+            return jsonify({
+                "desk_id": desk_id,
+                "status": details["status"],
+                "floor": floor  # Include floor info in response
+            })
 
-    return jsonify({"error": "User not found"}), 404
-
+    return jsonify({"error": "User not found on this floor"}), 404
 
 if __name__ == "__main__":
     app.run(debug=True)

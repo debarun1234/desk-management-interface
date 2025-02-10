@@ -8,13 +8,18 @@ import "./App.css";
 function App() {
   const [selectedFloor, setSelectedFloor] = useState("L2"); // Default Floor
   const [highlightedDesk, setHighlightedDesk] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");  // <-- Fix: Add this
 
   return (
     <div>
       <Header selectedFloor={selectedFloor} setSelectedFloor={setSelectedFloor} />
       <div className="container">
         <div className="desk-area">
-          <SearchBar setHighlightedDesk={setHighlightedDesk} />
+          <SearchBar setHighlightedDesk={setHighlightedDesk} 
+          selectedFloor={selectedFloor}
+          setErrorMessage={setErrorMessage}
+          />
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
           <DeskGrid highlightedDesk={highlightedDesk} selectedFloor={selectedFloor} />
         </div>
       </div>
