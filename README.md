@@ -38,7 +38,7 @@ The **Office Desk Management Portal** is a real-time desk availability system th
 ---
 
 ### **3️⃣ Floor Selection & Multi-Floor Management**  
-- Users can **switch between floors** via the dropdown (`L1` to `L18`).
+- Users can **switch between floors** via the dropdown (`L2` to `L18`).
 - Each floor has a **separate desk layout** stored in the backend.
 
 🎥 **Demo: Multi-Floor Desk Layout**  
